@@ -21,7 +21,7 @@ ramTypeToStr(ULONG ramType)
 static void
 usage(char* name, char* error)
 {
-  fprintf(stderr, "%s\nusage: %s: size (in bytes) [CHIP/FAST/ANY]\n", error, name);
+  fprintf(stderr, "%s: %s\nusage: %s size (in bytes) [CHIP/FAST/ANY]\n", name, error, name);
   exit(1);
 }
 
@@ -29,7 +29,7 @@ usage(char* name, char* error)
 int
 main(int argc, char** argv)
 {
-  ULONG userSignal = SIGBREAKF_CTRL_C, ramType = 0;
+  ULONG userSignal = SIGBREAKF_CTRL_C, ramType = MEMF_ANY;
   int done = 0, size = 0;
 
   if (argc < 2 || argc > 3) {
@@ -54,26 +54,24 @@ main(int argc, char** argv)
     }
   }
 
-  printf("Allocating %d bytes - ctrl-c to exit\n", size);
   void* waste = AllocMem(size, ramType);
 
   if (!waste) {
-    fprintf(stderr, "failed to allocated %d bytes of type %s\n", size, ramTypeToStr(ramType));
+    fprintf(stderr, "failed to allocate %d bytes of type %s\n", size, ramTypeToStr(ramType));
     exit(1);
+  } else {
+    printf("Allocated %d bytes of type %s.\nPress ctrl-c to exit\n", size, ramTypeToStr(ramType));
   }
 
   while (!done) {
     ULONG signals = Wait(userSignal);
 
     if (signals & userSignal) {
-        printf("User Ctrl-C Abort\n");
-	done = 1;
+      done = 1;
     }
   }
 
-  if (waste) {
-    FreeMem(waste, size);
-  }
+  FreeMem(waste, size);
 
   return 0;
 }
